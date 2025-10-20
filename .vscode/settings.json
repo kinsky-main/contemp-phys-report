@@ -9,6 +9,8 @@
         "Heike",
         "Kamerlingh",
         "koki",
+        "Krylov",
+        "likharev",
         "MOSFET",
         "ODLRO",
         "Onnes",
@@ -16,9 +18,12 @@
         "pagebreak",
         "przybysz",
         "repr",
+        "roseinnes",
         "RSFQ",
         "supercurrent",
+        "timestep",
         "tolpygo",
+        "underdamped",
         "wordometer"
     ],
     "cSpell.diagnosticLevel": "Error"

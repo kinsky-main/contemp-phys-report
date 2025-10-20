@@ -106,7 +106,7 @@ $
 where $g_"eff"$ is an effective electron-phonon coupling constant. This effective attraction enables the proposition of two electrons outside the Fermi sea to form a bound state, known as a Cooper pair @Annett-superconductivity-2004 @Bardeen-BCS-theory-1957. By solving the two-particle Schrodinger equation over all available states around the Fermi level, BCS theory shows that the binding energy of the Cooper pair is given by
 $
   -E = 2 planck omega_D e^(-1 "/" lambda) ,
-$
+$ <cooper-pair-binding-energy>
 where $lambda = abs(g_"eff")^2 g(epsilon.alt_F) lt.double 1$ is the dimensionless electron-phonon coupling constant and is assumed to be small.
 
 To find the overall ground state and energy gap $Delta$, creation and annihilation operators can be defined for Cooper pairs as
@@ -115,28 +115,57 @@ $
 $ <cooper-pair-operators>
 respectively, where the operators commute with themselves as long as they are for different momenta $bold(k) eq.not bold(k)'$. Using these commutative operators Cooper pairs can be added sequentially to the ground state. By expanding and considering annihilation operators as available for hole Cooper pairs @Annett-superconductivity-2004 the BCS ground state can be written as
 $
-  ket(Psi_(B C S)) = product_bold(k) (u_bold(k)c_(-bold(k)arrow.b)+v_bold(k)c^dagger_(bold(k)arrow.t))ket(0) #h(2pt) #text[.]
+  ket(Psi_(B C S)) = product_bold(k) (u_bold(k)c_(-bold(k)arrow.b)+v_bold(k)c^dagger_(bold(k)arrow.t))ket(0) #h(2pt) #text[,]
 $
+where $abs(u_bold(k))^2$ and $abs(v_bold(k))^2$ are the probabilities that the measured excitation is a electron or hole respectively. As such they satisfy the normalization condition $abs(u_bold(k))^2 + abs(v_bold(k))^2 = 1$ @Annett-superconductivity-2004. By minimising the expectation value of the Hamiltonian with respect to these coefficients, the energy gap $Delta$ can be found through the BCS gap equation
+$
+  1=lambda integral_0^(planck omega_D) d epsilon.alt 1 / sqrt(epsilon.alt^2 + abs(Delta^2)) tanh(sqrt(epsilon.alt^2 + abs(Delta^2)) / (2 k_B T)) .
+$
+Taking the limit of $Delta arrow 0$ for the point of transition at $T=T_C$, yields
+$
+  k_B T_C = 1.13 planck omega_D e^(-1 "/" lambda) ,
+$
+where $lambda$ is as defined in Equation @cooper-pair-binding-energy. This gap in the density of states at the Fermi level is a defining feature of superconductors, as any scattering of electrons must have a high enough energy to break the Cooper pair binding energy.
 
 == Josephson Effect
 
-Taking a step further, Brian D. Josephson considered the tunnelling of Cooper pairs between two superconductors separated by a thin insulating barrier @josephson-effect-1962. By considering the wavefunction on either side of the barrier
+Taking a step further, Brian D. Josephson considered the tunnelling of Cooper pairs between two superconductors isolated completely by a thin insulating barrier @josephson-effect-1962. This thin barrier can be crossed by a small supercurrent Cooper pairs via tunneling without any voltage drop @Annett-superconductivity-2004 @roseinnes-introduction-1978 as illustrated in Figure @jj-iv-characteristics, to a critical current $I_c$ shown to be
+$
+  I_S = I_c sin(theta_1 - theta_2) ,
+$ <josephson-dc-current-relationship>
+where $theta_1$ and $theta_2$ are the macroscopic quantum phases of the two superconductors either side of the junction. When driven beyond this critical current $I_c$, a finite voltage $V$ appears across the junction resulting in a time varying phase difference occurs
+$
+  phi = (2e V_0) / planck t ,
+$ <josephson-frequency-relationship>
+Where $phi = theta_1 - theta_2$ and is the Josephson phase. Substituting this time varying phase difference back into Equation @josephson-dc-current-relationship results in an oscillating current across the junction with frequency
+$
+  f = 2e V_0 / h .
+$
+This makes JJs act as extremely sensitive voltage to frequency converters. As described by Krylov and Rose-Innes @krylov-sic-design-2024 @roseinnes-introduction-1978, this behaviour is analogous to a damped pendulum when looking at the full JJ solution for current
+$
+  I = I_c sin(phi) + Phi_0 / (2 pi) G_N (d phi) / (d t) + C (Phi_0 / (2 pi)) (d^2 phi) / (d t^2) ,
+$
+where $G_N$ is an approximation for the non-linear conductance of the JJ and $C$ is the capacitance. In this analogy $phi$ the phase difference is the angle of the pendulum, $I_c$ corresponds to the mass and length of the pendulum, the conductance $G_N$ is proportional to the damping coefficient, the moment of inertia is proportional to the capacitance $C$, and any dc bias ($V_0$) can be thought of as the driving torque applied to the pendulum.
 
 #figure(
   image("figs/figure_3.png", fit: "contain"),
   caption: [The IV characteristics of an overdamped Josephson junction @Annett-superconductivity-2004. Below the critical current $I_c$, a supercurrent $I_S$ can flow with zero voltage drop $V=0$ or dissipation. Above $I_c$, quasiparticle creation and annihilation occurs across the gap resulting in a voltage drop and a phase dependent oscillating current $I_N$.],
   placement: top,
-)
+) <jj-iv-characteristics>
 
-= Recent Developments
+= Building Superconducting Integrated Circuits
 
-== SFQ logic stuff
+== Basics of Single Flux Quantum Logic
 
-- bias in JJs
+In Superconducting Integrated Circuits (SICs), information is encoded in very short Single Flux Quantum (SFQ) voltage pulses $V(t)$. As such most operations are clocked where a logical 1 (logical 0) is defined as a given timestep where is (is not) SFQ pulse is present within a clock period @krylov-sic-design-2024.
 
-== ELASIC
+SICs will typically use critically damped JJs where the transition from supercurrent to voltage state is almost instantaneous at $I_c$. In the underdamped example of Figure @jj-iv-characteristics, which is importantly single valued, it was shown by K.K. Likharev @likharev-rsfq-1991 that after a current pulse $I$ the junction should self-reset to its original superconducting state. However, if the bias current $I_b$ is high enough such that $I_b lt.tilde I_c$, the push from the pulse can can drive a full $2 pi$ phase rotation.
 
-== SuperNPU
+
+
+== Extremely Large Area SIC
+
+== Super Neural Processing Unit
 
 = Conclusion
 
