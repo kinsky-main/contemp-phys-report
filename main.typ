@@ -2,7 +2,7 @@
 #import "@local/phys-reports:0.1.0": phys-report
 #import "@preview/physica:0.9.5": *
 #import "@preview/wordometer:0.1.5": total-words, word-count
-#let report-title = "Superconducting Integrated Circuits to Further Moore's Law"
+#let report-title = "Superconducting Single Flux Quanta to Further Moore's Law"
 #let main-author = "Candidate 23511"
 #let publisher = "University of Bath"
 #let publication = [Contemporary Physics Technical Report]
@@ -55,7 +55,7 @@
   #text(size: 11pt, weight: "bold", "Abstract")
   #set align(left)
   #set par(first-line-indent: 0pt)
-  This report examines superconducting integrated circuits (SICs) as a path to extend computational performance beyond CMOS scaling limits. We first summarise foundations—BCS pairing, the energy gap Δ suppressing dissipation, and Josephson phase dynamics V=(ħ/2e)φ̇—enabling Single Flux Quantum (SFQ) signalling with picosecond pulses and negligible static power. We then connect these principles to circuit primitives, exemplified by RSFQ storage loops and clocked decision-making pairs. On fabrication, we review ELASIC, a mixed-lithography, wafer-scale method stitching sixteen DUV reticles into an 88x88 mm carrier while preserving JJ uniformity and superconducting continuity. At the design level, we discuss RustSFQ, a domain-specific language whose linear usage of pulses enforces one-producer/one-consumer semantics and netlist generation. Together, the device physics, scalable fabrication, and language tooling indicate a route to multi-chip SFQ systems operating at 10-100 GHz with improved energy efficiency and reliability. We outline priorities in density and yield, bias/clock distribution, and standardised toolchains to accelerate deployment.
+  This report examines superconducting integrated circuits (SICs) as a path to extend computational performance beyond CMOS power scaling limits @bunyk-rsfq-technology-2001. This is enabled by Josephson phase dynamics which provide a means Single Flux Quantum (SFQ) signalling with picosecond pulses and negligible static power. These principles have then allowed fo the establishment of circuit primitives @likharev-rsfq-1991, exemplified by Rapid SFQ (RSFQ) storage loops and clocked decision-making pairs. On the fabrication side ELASIC, a mixed-lithography, wafer-scale method stitching sixteen Deep-UV (DUV) reticles into an 88x88 mm carrier while preserving Josephson Junction (JJ) uniformity and superconducting continuity @das-elasic-2023. On the design side, new frameworks such as RustSFQ @oishi-rustsfq-2025, a domain-specific language whose linear usage of pulses enforces one-producer/one-consumer semantics enable the optimisation and design of more complex SFQ circuits. Together, the device physics, scalable fabrication, and language tooling indicate a route to multi-chip SFQ systems operating at 10-100 GHz with improved energy efficiency and reliability.
   \
 ]]
 
@@ -71,7 +71,7 @@ Although potentially impressive, superconducting electronics still face a long r
 
 However, the industry is beginning to reach the point where SFQ architectures are becoming well defined enough to soon warrant investment into the kind of design automation languages that have been the boon of the CMOS industry. This would enable the increases in gate optimisation and manufacturing scale required to bring substitute CMOS technology within certain fields.
 
-= Background
+= The Physics Behind Superconducting ICs
 
 == Discovery of Superconductivity
 
@@ -87,7 +87,7 @@ where $m$ the effective mass of the conduction electrons, $n$ the density of con
   placement: top,
 ) <onnes-experiment>
 
-== BCS Theory
+== BCS Theory <bcs-theory>
 
 In order to properly describe superconductivity BCS theory @Bardeen-BCS-theory-1957 aimed to describe all the attributes of superconductors. This included the Meissner effect of $bold(B)=0$ inside the superconductor, the existence of an energy gap $Delta$ in the electronic density of states at the Fermi level, and the seeming infinite conductivity $bold(E)=0$.
 
@@ -103,7 +103,7 @@ where $r_("TF")$ is the Thomas-Fermi screening length. This makes the effective 
   placement: top,
 ) <electron-phonon-interaction>
 
-Excluding the repulsive regime, where their frequencies $omega$ are greater than the average phonon (Debye) frequency $omega_D$. Then only looking at conduction electrons within $epsilon.alt_F plus.minus k_B T$ and in the superconducting regime $planck.reduce omega_D gt.double k_B T$ (@isotope-effect), simplifying the interaction to
+Excluding the repulsive regime, where their frequencies $omega$ are greater than the average phonon (Debye) frequency $omega_D$. Then only looking at conduction electrons within $epsilon.alt_F plus.minus k_B T$ and in the superconducting regime $planck.reduce omega_D gt.double k_B T$, simplifying the interaction to
 $
   V_("eff")(bold(q), omega) = -abs(g_"eff")^2 ,#h(25pt) abs(omega) lt omega_D
 $
@@ -131,7 +131,7 @@ $
 $
 where $lambda$ is as defined in Equation @cooper-pair-binding-energy. This gap in the density of states at the Fermi level is a defining feature of superconductors, as any scattering of electrons must have a high enough energy to break the Cooper pair binding energy.
 
-== Josephson Effect
+== Josephson Effect <josephson-effect>
 
 #figure(
   image("figs/figure_3.png", fit: "contain"),
@@ -145,9 +145,9 @@ $
 $ <josephson-dc-current-relationship>
 where $theta_1$ and $theta_2$ are the macroscopic quantum phases of the two superconductors either side of the junction. When driven beyond this critical current $I_c$, a finite voltage $V$ appears across the junction resulting in a time varying phase difference occurs
 $
-  phi = (2e V_0) / planck.reduce t ,
+  (d phi) / (d t) = (2e V_0) / planck.reduce ,
 $ <josephson-phase-relationship>
-Where $phi = theta_1 - theta_2$ and is the Josephson phase. Substituting this time varying phase difference back into Equation @josephson-dc-current-relationship results in an oscillating current across the junction with frequency
+Where $phi = theta_1 - theta_2$ and is the Josephson phase. Substituting the integral of this time varying phase difference back into Equation @josephson-dc-current-relationship results in an oscillating current across the junction with frequency
 $
   f = 2e V_0 / h .
 $ <josephson-frequency-relationship>
@@ -169,7 +169,7 @@ where $G_N$ is an approximation for the non-linear conductance of the JJ and $C$
 
 In Superconducting Integrated Circuits (SICs), information is encoded in very short Single Flux Quantum (SFQ) voltage pulses $V(t)$. As such most operations are clocked where a logical 1 (logical 0) is defined as a given timestep where is (is not) SFQ pulse is present within a clock period @krylov-sic-design-2024.
 
-SICs will typically use critically damped JJs where the transition from supercurrent to voltage state is almost instantaneous at $I_c$. In the underdamped example of Figure @jj-iv-characteristics, which is importantly single valued, it was shown by K.K. Likharev @likharev-rsfq-1991 that after a current pulse $I$ the junction should self-reset to its original superconducting state. However, if the bias current $I_b$ is high enough such that $I_b lt.tilde I_c$, the push from the pulse can drive a full $2 pi$ phase rotation. Similar to how a driving force on a highly damped pendulum at the critical angle can cause exactly one full rotation before coming to rest again. When timed correctly this results in a voltage pulse across the junction following the time derivative of Equation @josephson-phase-relationship, yielding a pulse of exactly one flux quantum $Phi_0$.
+SICs will typically use critically damped JJs where the transition from supercurrent to voltage state is almost instantaneous at $I_c$. In the underdamped example of Figure @jj-iv-characteristics, which is importantly single valued, it was shown by K.K. Likharev @likharev-rsfq-1991 that after a current pulse $I$ the junction should self-reset to its original superconducting state. However, if the bias current $I_b$ is high enough such that $I_b lt.tilde I_c$, the push from the pulse can drive a full $2 pi$ phase rotation. Similar to how a driving force on a highly damped pendulum at the critical angle can cause exactly one full rotation before coming to rest again. When timed correctly this results in a voltage pulse across the junction following Equation @josephson-phase-relationship, yielding a pulse of exactly one flux quantum $Phi_0$.
 
 One of the most simple circuit components described by K.K. Likharev @likharev-rsfq-1991 @krylov-sic-design-2024 that can be assembled (see Figure @rsfq-dff-circuit), would be a Rapid Single Flux Quantum (RSFQ) Destructive Flip-Flop (DFF). It comprises a storage loop (J3-$L$-J2) and a clock junction J1, with $L gt Phi_0"/"I_c$ so the loop can store a single flux quantum. In the idle "0" state, the bias current prefers the lower-inductance path through J3. Arrival of an input SFQ pulse switches J3 and injects one $Phi_0$ into the loop, establishing a persistent circulating current $I_s approx Phi_0/L$ whose direction encodes the "1" state (equivalently, the bias redistributes toward J2). Readout and reset are driven by a clock pulse at J1: J1 and J2 act as a decision-making pair (balanced comparator) so that, depending on the stored circulation, the junction closer to $I_c$ switches first, emitting an SFQ to the output and simultaneously clearing the stored flux i.e. a destructive readout that returns the cell to "0" unless the input refreshes it on the same cycle.
 
@@ -188,17 +188,17 @@ Following these logical operations all the required basic gates for conventional
   scope: "parent",
 ) <elasic-fabrication-process>
 
-Addressing the need for large area superconducting integrated circuits (SICs), R.N. Bolkhovsky et al. @das-elasic-2023 created a wafer-scale "Extremely Large Area Superconducting Integrated Circuit" (ELASIC) that interconnects sixteen 22 mm x 22 mm Deep-UV (DUV) into an 88 mm x 88 mm active carrier. Their mixed-lithography flow keeps all Josephson-junction-critical layers within high-resolution DUV fields while using courser i-line only for inter-reticle wiring and stitching. This provided
+Addressing the need for large area superconducting integrated circuits (SICs), R.N. Bolkhovsky et al. @das-elasic-2023 created a wafer-scale "Extremely Large Area Superconducting Integrated Circuit" (ELASIC) that interconnects sixteen 22 mm x 22 mm Deep-UV (DUV) into an 88 mm x 88 mm active carrier. Their mixed-lithography flow keeps all Josephson-junction-critical layers within high-resolution DUV fields while using courser i-line only for inter-reticle (single ray etching area) wiring and stitching. This provided
 
-Room-temperature junction resistance measurements show junction normal resistance $R_n$ uniformity comparable to MIT-LL's SFQ5ee baselines @semenov-jj-ram-2019; indicating consistent $I_c$ and $I_c R_n$ at 4.2 K, preserving the Josephson phase-voltage dynamics that underpin SFQ pulse formation derived from Equation @josephson-phase-relationship. Superconducting continuity across stitch interfaces is supported by 0.8 $mu$m testing "snake-and-comb" lines carrying 30-40 mA at 4.2 K, consistent with low added series resistance at stitches. The process integrates Nb/Al-AlO/Nb trilayer JJs (target $J_c approx 10$ kA/cm), multilayer Nb wiring, sub-micron DUV vias, and stitched i-line interconnects into a 13-mask, 200 mm flow.
+Room-temperature junction resistance measurements show junction normal resistance $R_n$ uniformity comparable to MIT-LL's SFQ5ee baselines @semenov-jj-ram-2019; indicating consistent $I_c$ and $R_n$ at 4.2 K, preserving the Josephson phase-voltage dynamics that underpin SFQ pulse formation derived from Equation @josephson-phase-relationship. Superconducting continuity across stitch interfaces is supported by 0.8 $mu$m testing "snake-and-comb" lines carrying 30-40 mA at 4.2 K, consistent with low added series resistance at stitches. The process integrates Nb/Al-AlO/Nb trilayer JJs (target $J_c approx 10$ kA/cm), multilayer Nb wiring, sub-micron DUV vias, and stitched i-line interconnects into a 13-mask, 200 mm flow.
 
-Linking fabrication to circuit-level operation @das-elasic-2023, data currents are transmitted of order 5-10 $mu$A across stitched regions and setting an upper bound of $approx 2 mu Omega$ on stitch-boundary series resistance from low-frequency operation. Maintaining uniform critical Josephson currents $I_c$ and low-loss Nb interconnects ensures that Cooper-pair transport within the BCS gap ($Delta$) proceeds without quasiparticle dissipation, while well-controlled junction parameters stabilize the Josephson phase evolution needed for reliable SFQ-style signaling. The manufacturing methods used are critical to ensure macroscopic superconducting behavior ($bold(E)=0$, $bold(B)=0$ interior, stable $I_c R_n$).
+Linking fabrication to circuit-level operation @das-elasic-2023, data currents are transmitted of order 5-10 $mu$A across stitched regions and setting an upper bound of $approx 2 mu Omega$ on stitch-boundary series resistance from low-frequency operation. Maintaining uniform critical Josephson currents $I_c$ and low-loss Nb interconnects ensures that Cooper-pair transport within the BCS gap ($Delta$) (See @bcs-theory) and proceeds with minimal quasiparticle dissipation @krylov-sic-design-2024, while well-controlled junction parameters stabilize the Josephson phase evolution needed for reliable SFQ-style signaling (See @josephson-effect). The manufacturing methods used are critical to ensure macroscopic superconducting behavior ($bold(E)=0$, $bold(B)=0$ interior, stable $I_c R_n$).
 
 == Domain Specific Languages
 
-Oishi, Tanaka, and Takamaeda-Yamazaki introduce RustSFQ @oishi-rustsfq-2025, a domain-specific language embedded in Rust that formalizes SFQ's pulse-driven semantics at the language level by enforcing input-output consistency through Rust's ownership model: each emitted pulse (a single $Phi_0$ packet per Josephson relation $V=hbar/(2e) dot phi$ in the background) must be consumed exactly once by a downstream gate. In RustSFQ, gates are methods on a `Circuit`, and wires are linear (single-use) values; the compiler prevents fan-out without an explicit `SPLIT`, guards against unconsumed pulses, and statically checks port counts when composing subcircuits. The DSL targets gate-level descriptions close to netlists and automatically emits SPICE and Verilog with deterministic net naming, reducing manual bookkeeping that is error-prone in pulse logic. These abstractions align with the superconducting picture in which dissipationless Cooper-pair transport within the BCS gap supports high-fidelity SFQ pulses, while the one-pulse/one-consumer rule reflects the indivisibility of flux quanta in JJ logic.
+To address the issues of design and move towards CMOS competitiveness, Oishi et al. have recently developed RustSFQ @oishi-rustsfq-2025. A domain-specific language embedded in Rust that formalizes SFQ's pulse-driven semantics at the language level by enforcing input-output consistency through Rust's ownership model: each emitted pulse (a single $Phi_0$ packet as per Equation @josephson-phase-relationship) must be consumed exactly once by a downstream gate. In RustSFQ, gates are methods on a `Circuit`, and wires are linear (single-use) values; the compiler prevents fan-out without an explicit `SPLIT`, guards against unconsumed pulses, and statically checks port counts when composing subcircuits. The Domain Specific Language (DSL) produces gate-level descriptions (netlists) and automatically emits SPICE @analog-ltspice-2024 and Verilog @williams-verilog-2024 with deterministic net naming, reducing manual bookkeeping that is error-prone in pulse logic. These abstractions built on K.K. Likharev's architecture @likharev-rsfq-1991 allows far more complex circuits to be produced. While the one-pulse/one-consumer rule respects the indivisibility of flux quanta in JJ logic.
 
-Beyond straight-line pipelines, the authors add constructs needed for JJ-based systems: explicit loop annotation for feedback circuits and a `CounterWire` type to express counter-flow clocking, where the clock travels opposite to data to hide loop delays—an established technique for reaching high operating frequencies in SFQ pipelines. They also codify clockless pulse gating using NDRO elements, whose internal state is toggled by set/reset pulses and read by data-as-clock, avoiding the need for a clocked AND when simple gating is required. The paper illustrates these ideas with a half-adder and then a case study: a pipelined SFQ Reed-Solomon RS(12,8) encoder (4-bit symbols) using constant multipliers ($alpha^3,alpha^6,alpha^10,alpha^13$), NDRO-based gating, and staged buffering. Digital (Icarus Verilog) and analog (JoSIM) simulations confirm correct operation at 10 GHz; excluding input buffering, the computation completes in 48 cycles (4.8 ns at 100 ps/clk). The implementation demonstrates practical productivity benefits (e.g., 796 nets of which $approx$ 73 % named automatically) while preserving the timing discipline required for SFQ gates that are inherently clock-synchronous and phase-coherent, thus connecting software-level invariants to the Josephson-phase dynamics and low-loss superconducting transport emphasized in the background.
+Beyond straight-line pipelines, the authors add constructs needed for JJ-based systems: explicit loop annotation for feedback circuits and a `CounterWire` type to express counter-flow clocking, where the clock travels opposite to data to hide loop delays-an established technique for reaching high operating frequencies in SFQ pipelines @koki-super-npu-2020. They also codify clockless pulse gating using Non-Destructive ReadOut (NDRO) elements, whose internal state is toggled by set/reset pulses and read by data-as-clock, avoiding the need for a clocked AND when simple gating is required @oishi-rustsfq-2025. The paper illustrates these ideas with a half-adder and then a case study: a pipelined SFQ Reed-Solomon (RS) encoder, commonly used in QR codes and communications protocols @dayal-reed-solomon-fpga-2013. To verify this digital (Icarus Verilog @williams-verilog-2024) and superconducting analog (JoSIM @joeydelp-josim-2023) simulations confirmed correct operation at 10 GHz. Excluding input buffering, the computation completes in 48 cycles (4.8 ns at 100 ps per clock cycle). The implementation demonstrates practical productivity benefits (e.g., 796 nets of which $approx$ 70 % named automatically) while preserving the timing discipline required for SFQ gates that are inherently clock-synchronous and phase-coherent @krylov-sic-design-2024, thus connecting software-level invariants to the Josephson-phase dynamics and low-loss superconducting transport emphasized in the background.
 
 #figure(
   image("figs/figure_6.png", fit: "contain"),
@@ -206,15 +206,15 @@ Beyond straight-line pipelines, the authors add constructs needed for JJ-based s
   placement: top,
 ) <rustsfq-examples>
 
-= Conclusion
+= Looking to the Future
 
-Superconducting integrated circuits (SICs) exploit microscopic features of the BCS ground state—an excitation gap $Delta$ suppressing quasiparticle dissipation and a well-defined Josephson phase—to realize energy-efficient, picosecond-scale switching. In the logic regime, SFQ pulses derived from $V=(hbar/2e)dot phi$ provide a quantized signaling primitive whose integrity ultimately depends on uniform $I_c$, stable $I_c R_n$, and low-loss superconducting wiring. The report has outlined how these microscopic constraints propagate to device and system design, from elementary RSFQ storage loops to reticle-scale integration.
+Superconducting integrated circuits (SICs) exploit microscopic features of the BCS ground state-an excitation gap $Delta$ suppressing quasiparticle dissipation and a well-defined Josephson phase-to realize energy-efficient, picosecond-scale switching. In the logic regime, SFQ pulses derived from Equation @josephson-phase-relationship provide a quantized signaling primitive whose integrity ultimately depends on uniform $I_c$, stable $I_c R_n$ @krylov-sic-design-2024, and low-loss superconducting wiring. It is important to highlight how these microscopic physical constraints, imposed by BCS-Theory, propagate to device and system design, from elementary RSFQ storage loops to reticle-scale integration.
 
-On the fabrication side, ELASIC demonstrates that mixed-lithography stitching can extend JJ-based systems beyond single-reticle limits while preserving junction uniformity and superconducting continuity across stitch interfaces. This addresses a key physical-to-manufacturing translation: maintaining phase-coherent, dissipationless transport over centimeter scales without degrading the JJ parameters that set SFQ pulse timing. Such results indicate a credible path to assembling multi-chip SFQ systems where wire delay, bias distribution, and clock skew remain compatible with ~10-100 GHz operation.
+On the fabrication side, ELASIC demonstrates @das-elasic-2023 that mixed-lithography stitching can extend JJ-based systems beyond single-reticle limits while preserving junction uniformity and superconducting continuity across stitch interfaces. This addresses a key physical-to-manufacturing translation: maintaining phase-coherent, dissipationless transport over centimeter scales without degrading the JJ parameters that set SFQ pulse timing. Such results indicate a credible path to assembling multi-chip SFQ systems where wire delay, bias distribution, and clock skew remain compatible with \~10-100 GHz and beyond.
 
-On the design side, RustSFQ illustrates how domain-specific languages can encode pulse-conservation and timing discipline as compile-time invariants. By tying netlist generation to linear usage of pulses and explicit fan-out/synchronization, the language mirrors the underlying physics—each $Phi_0$ pulse is indivisible and must be consumed exactly once—while reducing design errors that would otherwise manifest as metastable states or lost quanta. Together with analog/digital co-simulation, such tools begin to close the gap between device physics, circuit timing, and system-level verification.
+On the design side, RustSFQ illustrates how domain-specific languages can encode pulse-conservation and timing discipline as compile-time invariants @oishi-rustsfq-2025. By tying netlist generation to linear usage of pulses and explicit fan-out/synchronization, the language mirrors the underlying physics-each $Phi_0$ pulse is indivisible and must be consumed exactly once-while reducing design errors that would otherwise manifest as metastable states or lost quanta. Together with analog/digital co-simulation @williams-verilog-2024 @joeydelp-josim-2023, such tools begin to close the gap between device physics, circuit timing, and system-level verification.
 
-Looking ahead, three priorities emerge. First, density and yield: further improvements in JJ critical-layer control, via/via-stack resistance, and wafer-scale stitching are needed to push beyond today's JJ/cm² while sustaining uniform $I_c R_n$. Second, power and interconnect: bias-distribution networks, clock trees, and cryogenic I/O must be co-optimized to minimize dynamic bias losses and latency, including exploration of multi-tier (3D) integration and low-loss cryo-links. Third, design automation and verification: standard cell libraries, timing/power sign-off models for SFQ families, and DSL-to-PDK toolchains should mature together, enabling hierarchical composition without violating pulse-level invariants. In the near term, SICs are well-positioned for cryogenic control, readout, and domain-specific accelerators; in the longer term, continued progress at the junction, interconnect, and language levels will determine whether SICs can complement or surpass CMOS for selected high-throughput, energy-constrained workloads.
+Looking ahead, three priorities emerge. First, density and yield: further improvements in JJ critical-layer control, via/via-stack resistance, and wafer-scale stitching are needed to push beyond today's JJ/cm$""^2$ while sustaining uniform $I_c$ and $R_n$. Second, power and interconnect: voltage bias ($V_0$) distribution networks, clock trees, and cryogenic I/O must be co-optimized to minimize dynamic bias losses and latency, including exploration of multi-tier (3D) integration and low-loss cryogenic to room temperature links. Third, design automation and verification: standard cell libraries, timing/power sign-off models for SFQ families, and DSL to netlist (gate-description) toolchains should mature together, enabling hierarchical composition without violating pulse-level invariants. In the near term, SICs are well-positioned for cryogenic control, readout, and domain-specific accelerators. In the longer term, continued progress at the junction, interconnect, and language levels will determine whether SICs can complement or surpass CMOS for selected high-throughput, energy-constrained workloads.
 
 = References
 
@@ -223,24 +223,3 @@ Looking ahead, three priorities emerge. First, density and yield: further improv
   style: "ieee",
   title: none,
 )
-
-#pagebreak()
-
-#set page(columns: 1)
-
-// Appendix heading style
-#let appendix(body) = {
-  set heading(numbering: "A", supplement: [appendix])
-  counter(heading).update(0)
-  body
-}
-
-#outline(target: heading.where(supplement: [appendix]), title: [Appendix])
-
-#show: appendix
-
-= Trivia
-
-== Isotope Effect <isotope-effect>
-
-This is what defines the isotope effect as the band of available states around the Fermi sea thickens with decreasing ionic mass $M$, as $omega_D tilde sqrt(k "/" M)$.
